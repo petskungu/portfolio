@@ -190,3 +190,9 @@ if (contactForm) {
         }
     });
 }
+// Add to script.js
+function filterProjects(category) {
+    document.querySelectorAll('.project-card').forEach(card => {
+        card.style.display = card.dataset.category.includes(category) ? 'block' : 'none';
+    });
+}
