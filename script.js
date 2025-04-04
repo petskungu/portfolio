@@ -86,41 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 // Contact form submission
-const contactForm = document.querySelector('.contact-form');
-if (contactForm) {
-    contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(contactForm);
-        const submitButton = contactForm.querySelector('button[type="submit"]');
-        const originalButtonText = submitButton.textContent;
-        
-        try {
-            submitButton.disabled = true;
-            submitButton.textContent = 'Sending...';
-            
-            const response = await fetch('process_contact.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                contactForm.reset();
-                showNotification('Message sent successfully!', 'success');
-            } else {
-                showNotification(result.message || 'Error sending message', 'error');
-            }
-        } catch (error) {
-            showNotification('Network error. Please try again.', 'error');
-            console.error('Error:', error);
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = originalButtonText;
-        }
-    });
-}
+
 
 // Notification function
 function showNotification(message, type) {
@@ -172,4 +138,55 @@ function handlePortfolioClick(event) {
             projectCard.style.boxShadow = '';
         }, 300);
     }
+}
+// Contact Form Handling
+const contactForm = document.getElementById('contactForm');
+if (contactForm) {
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const submitButton = form.querySelector('.submit-button');
+        const statusElement = form.querySelector('.form-status');
+        const originalButtonText = submitButton.textContent;
+        
+        try {
+            // UI Loading State
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+            statusElement.textContent = '';
+            statusElement.className = 'form-status';
+            
+            // Send to Formspree
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                statusElement.textContent = 'Message sent successfully!';
+                statusElement.classList.add('success');
+                form.reset();
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to send message');
+            }
+        } catch (error) {
+            statusElement.textContent = error.message || 'Error sending message. Please try again.';
+            statusElement.classList.add('error');
+            console.error('Form error:', error);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+            
+            // Clear status after 5 seconds
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = 'form-status';
+            }, 5000);
+        }
+    });
 }
